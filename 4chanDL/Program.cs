@@ -1,65 +1,34 @@
-﻿using HtmlAgilityPack;
+﻿using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using System;
-using System.Net.Http;
-using System.Threading.Tasks;
 
-namespace _4chanDL
+class Program
 {
-    public static class Config
+    static void Main()
     {
-        public static string Url { get; set; } = "https://boards.4chan.org/biz/catalog";
-        public static string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36";
-    }
+        ChromeOptions options = new ChromeOptions();
 
-    internal class Program
-    {
-        static readonly HttpClient client = new HttpClient();
+        // Set up the ChromeDriver instance with proxy configuration using AddArgument
+        options.AddArgument("--proxy-server=http://23.247.136.252:80");
 
-        public static async Task<HtmlDocument> FetchThreads(string url)
-        {
-            var html = await GetHTTP(url);
-            return ParseHTML(html);
-        }
 
-        static async Task Main(string[] args)
-        {
-            Console.WriteLine("Fetching threads...");
-            var threads = await FetchThreads(Config.Url);
-            var thread = threads.DocumentNode.SelectSingleNode("//div[@id='threads']");
+        // Set up the ChromeDriver instance
+        IWebDriver driver = new ChromeDriver(options);
 
-        }
+        // Navigate to target website
+        driver.Navigate().GoToUrl("http://ident.me");
 
-        
-        public static HtmlDocument ParseHTML(string html)
-        {
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(html);
-            return htmlDoc;
-        }
+        // Add a wait for three seconds
+        Thread.Sleep(3000);
 
-        public static async Task<string> GetHTTP(string url)
-        {
-            try
-            {
-                if (!client.DefaultRequestHeaders.Contains("User-Agent"))
-                {
-                    client.DefaultRequestHeaders.Add("User-Agent", Config.UserAgent);
-                }
+        // Select the HTML body
+        IWebElement pageElement = driver.FindElement(By.TagName("body"));
 
-                using HttpResponseMessage response = await client.GetAsync(new Uri(url));
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync();
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Request error: {e.Message}");
-                return "";
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"An error occurred: {e.Message}");
-                return "";
-            }
-        }
+        // Get and print the text content of the page
+        string pageContent = pageElement.Text;
+        Console.WriteLine(pageContent);
+
+        // Close the browser
+        driver.Quit();
     }
 }
